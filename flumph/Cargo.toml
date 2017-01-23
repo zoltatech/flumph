@@ -1,0 +1,6 @@
+[package]
+name = "flumph"
+version = "0.1.0"
+authors = ["Rob Snyder <zoltatech@gmail.com>"]
+
+[dependencies]
