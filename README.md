@@ -1,2 +1,2 @@
 # flumph
-A simple row-oriented database for Rust
+A simple row-oriented database in Rust

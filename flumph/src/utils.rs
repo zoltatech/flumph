@@ -13,6 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod structures;
-pub mod database;
-mod utils;
+pub fn convert_i32_to_bytes(data: u32) -> [u8;4] {
+    let mut buffer: [u8;4] = [0;4];
+    buffer[0] = ((data & 0xFF000000) >> 24) as u8;
+    buffer[1] = ((data & 0x00FF0000) >> 16) as u8;
+    buffer[2] = ((data & 0x0000FF00) >> 8) as u8;
+    buffer[3] = (data & 0x000000FF) as u8;
+
+    buffer
+}
+
+// pub fn convert_string_to_bytes<'a>(data: &String)-> &'a [u8] {
+//     let mut buffer: vec![];
+
+// }
