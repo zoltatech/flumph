@@ -13,7 +13,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod field;
-pub mod table;
-pub mod table_persistence;
-mod utils;
+use std::string::String;
+
+pub struct Field {
+    offset: u32,
+    length: u32,
+    field_name: String
+}
+
+impl Field {
+
+    pub fn offset(&self) -> u32 {
+        self.offset
+    }
+
+    pub fn length(&self) -> u32 {
+        self.length
+    }
+
+    pub fn field_name(&self) -> &String {
+        &self.field_name
+    }
+
+    pub fn new(field_name: String) -> Field {
+        Field{field_name: field_name, offset: 0, length: 0 }
+    }
+
+}

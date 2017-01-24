@@ -13,17 +13,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub fn convert_i32_to_bytes(data: u32) -> [u8;4] {
+pub fn convert_u32_to_bytes(data: u32) -> [u8;4] {
+
     let mut buffer: [u8;4] = [0;4];
+
     buffer[0] = ((data & 0xFF000000) >> 24) as u8;
     buffer[1] = ((data & 0x00FF0000) >> 16) as u8;
-    buffer[2] = ((data & 0x0000FF00) >> 8) as u8;
-    buffer[3] = (data & 0x000000FF) as u8;
+    buffer[2] = ((data & 0x0000FF00) >> 8)  as u8;
+    buffer[3] = ((data & 0x000000FF) >> 0)  as u8;
 
     buffer
 }
 
-// pub fn convert_string_to_bytes<'a>(data: &String)-> &'a [u8] {
-//     let mut buffer: vec![];
+pub fn convert_u64_to_bytes(data: u64) -> [u8;8] {
 
-// }
+    let mut buffer: [u8;8] = [0;8];
+
+    buffer[0] = ((data & 0xFF00000000000000) >> 56) as u8;
+    buffer[1] = ((data & 0x00FF000000000000) >> 48) as u8;
+    buffer[2] = ((data & 0x0000FF0000000000) >> 40) as u8;
+    buffer[3] = ((data & 0x000000FF00000000) >> 32) as u8;
+    buffer[4] = ((data & 0x00000000FF000000) >> 24) as u8;
+    buffer[5] = ((data & 0x0000000000FF0000) >> 16) as u8;
+    buffer[6] = ((data & 0x000000000000FF00) >> 8)  as u8;
+    buffer[7] = ((data & 0x00000000000000FF) >> 0)  as u8;
+
+    buffer
+
+}
+
+
+
