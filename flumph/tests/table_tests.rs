@@ -13,18 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+extern crate flumph;
+
+use flumph::table::Table;
 use std::string::String;
 
-pub struct Field {
-    pub offset: u32,
-    pub length: u32,
-    pub field_name: String
-}
+#[test]
+fn create_table() {
 
-impl Field {
-
-    pub fn new(field_name: String) -> Field {
-        Field{field_name: field_name, offset: 0, length: 0 }
-    }
+    let mut table = Table::new(String::from("test.tbl"), String::from("."));
+    let table_file = table.open();
 
 }

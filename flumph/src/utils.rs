@@ -25,6 +25,12 @@ pub fn convert_u32_to_bytes(data: u32) -> [u8;4] {
     buffer
 }
 
+pub fn convert_bytes_to_u32(buffer: [u8; 4]) -> u32 {
+
+    (buffer[0] as u32) >> 24 | (buffer[1] as u32) >> 16 | (buffer[2] as u32) >> 8 | (buffer[3] as u32)
+
+}
+
 pub fn convert_u64_to_bytes(data: u64) -> [u8;8] {
 
     let mut buffer: [u8;8] = [0;8];
@@ -39,6 +45,14 @@ pub fn convert_u64_to_bytes(data: u64) -> [u8;8] {
     buffer[7] = ((data & 0x00000000000000FF) >> 0)  as u8;
 
     buffer
+
+}
+
+pub fn convert_bytes_to_u64(buffer: [u8; 8]) -> u64 {
+
+    (buffer[0] as u64) << 56 | (buffer[1] as u64) << 48 | (buffer[2] as u64) << 40 | 
+        (buffer[3] as u64) << 32 | (buffer [4] as u64) << 24 | (buffer[5] as u64) << 16 |
+        (buffer[6] as u64) << 8 | (buffer[7] as u64)
 
 }
 
