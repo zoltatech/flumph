@@ -25,6 +25,7 @@ use utils::convert_bytes_to_u64;
 use utils::convert_bytes_to_u32;
 use std::io::Read;
 use std::iter::Iterator;
+use std::error::Error;
 
 const OFFSET_EYECATCHER: u64 = 0;
 const OFFSET_RECORD_LENGTH: u64 = 4;
@@ -40,40 +41,43 @@ pub fn get_file_length(file: &mut File) -> u64 {
 
 }
 
-pub fn read_table_header(table: &mut Table, file: &mut File) -> Result<(), String> {
+pub fn read_table_header(table: &mut Table, file: &mut File) -> Result<(), Box<Error>> {
 
-    file.seek(SeekFrom::Start(OFFSET_EYECATCHER)).expect("Error while reading read_eyecatcher");
+    try!(file.seek(SeekFrom::Start(OFFSET_EYECATCHER)));
 
     let mut buffer = [0; 4];
-    file.read_exact(&mut buffer).unwrap();
+    try!(file.read_exact(&mut buffer));
     let eyecatcher = String::from_utf8_lossy(&buffer).into_owned();
 
     if eyecatcher != "FTBL" {
-        return Err(String::from("This table does not appear to be valid!"));
-    };
+        panic!("This table does not appear to be valid!");
+        //Err(From::from("This table does not appear to be valid!"))
+    } 
 
     let mut buffer = [0; 8];
-    file.read_exact(&mut buffer).unwrap();
+    try!(file.read_exact(&mut buffer));
     table.record_length = convert_bytes_to_u64(buffer);
-    file.read_exact(&mut buffer).unwrap();
+
+    try!(file.read_exact(&mut buffer));
     table.record_count = convert_bytes_to_u64(buffer);
-    file.read_exact(&mut buffer).unwrap();
+    
+    try!(file.read_exact(&mut buffer));
     table.first_record_pointer = convert_bytes_to_u64(buffer);
 
     let mut buffer = [0; 4];
-    file.read_exact(&mut buffer).unwrap();
+    try!(file.read_exact(&mut buffer));
     let field_count = convert_bytes_to_u32(buffer);
 
-    for field_index in (0..field_count).enumerate() {
+    for _ in (0..field_count).enumerate() {
         
         let mut buffer = [0; 4];
-        file.read_exact(&mut buffer).unwrap();
+        try!(file.read_exact(&mut buffer));
         let mut field = Field::new(String::from_utf8_lossy(&buffer).into_owned());
 
-        file.read_exact(&mut buffer).unwrap();
+        try!(file.read_exact(&mut buffer));
         field.offset = convert_bytes_to_u32(buffer);
 
-        file.read_exact(&mut buffer).unwrap();
+        try!(file.read_exact(&mut buffer));
         field.length = convert_bytes_to_u32(buffer);
 
         table.fields.push(field);
@@ -84,50 +88,52 @@ pub fn read_table_header(table: &mut Table, file: &mut File) -> Result<(), Strin
 
 }
 
-pub fn create_table_header(table: &mut Table, file: &mut File) {
+pub fn create_table_header(table: &mut Table, file: &mut File) -> Result<(), Box<Error>> {
 
-    file.seek(SeekFrom::Start(OFFSET_EYECATCHER)).unwrap();
-    write!(file, "FTBL").unwrap();
+    try!(file.seek(SeekFrom::Start(OFFSET_EYECATCHER)));
+    try!(write!(file, "FTBL"));
     
     let buffer = convert_u64_to_bytes(table.record_length);
-    file.write(&buffer).unwrap();
+    try!(file.write(&buffer));
 
     let buffer = convert_u64_to_bytes(table.record_count);
-    file.write(&buffer).unwrap();
+    try!(file.write(&buffer));
 
     let buffer = convert_u64_to_bytes(table.first_record_pointer);
-    file.write(&buffer).unwrap();
+    try!(file.write(&buffer));
 
     let buffer = convert_u32_to_bytes(table.fields.len() as u32);
-    file.write(&buffer).unwrap();
+    try!(file.write(&buffer));
     
     let mut record_length: u64 = 0;
     for field in &table.fields {
         
         let buffer = convert_u32_to_bytes(field.field_name.len() as u32);
-        file.write(&buffer).unwrap();
-        file.write(field.field_name.as_bytes()).unwrap();
+        try!(file.write(&buffer));
+        try!(file.write(field.field_name.as_bytes()));
 
         let buffer = convert_u32_to_bytes(field.offset);
-        file.write(&buffer).unwrap();
+        try!(file.write(&buffer));
 
         let buffer = convert_u32_to_bytes(field.length);
-        file.write(&buffer).unwrap();
+        try!(file.write(&buffer));
 
         record_length = record_length + (field.length as u64);
 
     }
 
-    let first_record_pointer = file.seek(SeekFrom::Current(0)).unwrap();
+    let first_record_pointer = try!(file.seek(SeekFrom::Current(0)));
     let buffer = convert_u64_to_bytes(first_record_pointer);
-    file.seek(SeekFrom::Start(OFFSET_FIRST_RECORD_POINTER)).unwrap();
-    file.write(&buffer).unwrap();
+    try!(file.seek(SeekFrom::Start(OFFSET_FIRST_RECORD_POINTER)));
+    try!(file.write(&buffer));
 
     table.record_length = record_length;
     let buffer = convert_u64_to_bytes(record_length);
-    file.seek(SeekFrom::Start(OFFSET_RECORD_LENGTH)).unwrap();
-    file.write(&buffer).unwrap();
+    try!(file.seek(SeekFrom::Start(OFFSET_RECORD_LENGTH)));
+    try!(file.write(&buffer));
 
-    file.sync_all().expect("Failure while syncing file data.");
+    try!(file.sync_all());
+
+    Ok(())
 
 }

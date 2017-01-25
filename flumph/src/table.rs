@@ -19,7 +19,9 @@ use std::path::Path;
 use std::fs::File;
 use std::fs::OpenOptions;
 use table_persistence::create_table_header;
+use table_persistence::read_table_header;
 use table_persistence::get_file_length;
+use std::error::Error;
 
 pub struct Table {
     pub record_length: u64,
@@ -37,17 +39,19 @@ impl Table {
             first_record_pointer: 0, fields: vec![]}
     }
 
-    pub fn open(&mut self) -> File {
+    pub fn open(&mut self) -> Result<File, Box<Error>> {
         let path = Path::new(&self.file_path).join(&self.table_name);
         let mut file = OpenOptions::new().read(true).write(true).create(true).open(path)
             .expect("Could not open table");
 
 
         if get_file_length(&mut file) == 0 {
-            create_table_header(self, &mut file);
+            try!(create_table_header(self, &mut file));
+        } else {
+            try!(read_table_header(self, &mut file));
         }
 
-        file
+        Ok(file)
 
     }
 

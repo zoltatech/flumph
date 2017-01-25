@@ -50,9 +50,9 @@ pub fn convert_u64_to_bytes(data: u64) -> [u8;8] {
 
 pub fn convert_bytes_to_u64(buffer: [u8; 8]) -> u64 {
 
-    (buffer[0] as u64) << 56 | (buffer[1] as u64) << 48 | (buffer[2] as u64) << 40 | 
-        (buffer[3] as u64) << 32 | (buffer [4] as u64) << 24 | (buffer[5] as u64) << 16 |
-        (buffer[6] as u64) << 8 | (buffer[7] as u64)
+    ((buffer[0] as u64) << 56) | ((buffer[1] as u64) << 48) | ((buffer[2] as u64) << 40) | 
+        ((buffer[3] as u64) << 32) | ((buffer [4] as u64) << 24) | ((buffer[5] as u64) << 16) |
+        ((buffer[6] as u64) << 8) | ((buffer[7] as u64))
 
 }
 
