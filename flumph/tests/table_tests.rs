@@ -68,6 +68,15 @@ fn test_table_header() {
     assert_eq!(table.record_count, 0xFF00FF00DDEEDDEE);
     assert_eq!(table.fields.len(), 2);
 
+    let field = &table.fields[0];
+    assert_eq!(field.length, 40);
+    assert_eq!(field.offset, 0);
+    assert_eq!(field.field_name, "ID");
+
+    let field = &table.fields[1];
+    assert_eq!(field.length, 60);
+    assert_eq!(field.offset, 40);
+    assert_eq!(field.field_name, "Name");
 
     
 
