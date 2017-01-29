@@ -16,69 +16,35 @@
 use table::Table;
 use field::Field;
 use std::fs::File;
-use std::io::SeekFrom;
-use std::io::Seek;
-use std::io::Write;
-use utils::convert_u64_to_bytes;
-use utils::convert_u32_to_bytes;
-use utils::convert_bytes_to_u64;
-use utils::convert_bytes_to_u32;
-use std::io::Read;
 use std::iter::Iterator;
 use std::error::Error;
+use table_io::*; 
 
-const OFFSET_EYECATCHER: u64 = 0;
 const OFFSET_RECORD_LENGTH: u64 = 4;
-const OFFSET_RECORD_COUNT: u64 = 12;
-const OFFSET_FIRST_RECORD_POINTER: u64 = 20;
-const OFFSET_FIELD_COUNT: u64 = 28;
-const OFFSET_FIELD_LIST: u64 = 32;
+const OFFSET_RECORD_COUNT: u64 = 8;
+const OFFSET_FIRST_RECORD_POINTER: u64 = 16;
+const OFFSET_FIELD_COUNT: u64 = 20;
+const OFFSET_FIELD_LIST: u64 = 28;
 
-
-pub fn get_file_length(file: &mut File) -> u64 {
-
-    file.seek(SeekFrom::End(0)).unwrap()
-
-}
 
 pub fn read_table_header(table: &mut Table, file: &mut File) -> Result<(), Box<Error>> {
 
-    try!(file.seek(SeekFrom::Start(OFFSET_EYECATCHER)));
+    try!(validate_eyecatcher(file, String::from("FTBL")));
 
-    let mut buffer = [0; 4];
-    try!(file.read_exact(&mut buffer));
-    let eyecatcher = String::from_utf8_lossy(&buffer).into_owned();
+    table.record_length = try!(seek_and_read_u32(file, 0, OFFSET_RECORD_LENGTH));
+    table.record_count = try!(seek_and_read_u64(file, 0, OFFSET_RECORD_COUNT));
+    table.first_record_pointer = try!(seek_and_read_u64(file, 0, OFFSET_FIRST_RECORD_POINTER));
+    let field_count = try!(seek_and_read_u32(file, 0, OFFSET_FIELD_COUNT));
 
-    if eyecatcher != "FTBL" {
-        panic!("This table does not appear to be valid!");
-        //Err(From::from("This table does not appear to be valid!"))
-    } 
-
-    let mut buffer = [0; 8];
-    try!(file.read_exact(&mut buffer));
-    table.record_length = convert_bytes_to_u64(buffer);
-
-    try!(file.read_exact(&mut buffer));
-    table.record_count = convert_bytes_to_u64(buffer);
-    
-    try!(file.read_exact(&mut buffer));
-    table.first_record_pointer = convert_bytes_to_u64(buffer);
-
-    let mut buffer = [0; 4];
-    try!(file.read_exact(&mut buffer));
-    let field_count = convert_bytes_to_u32(buffer);
+    try!(move_to_offset(file, 0, OFFSET_FIELD_LIST));
 
     for _ in (0..field_count).enumerate() {
         
-        let mut buffer = [0; 4];
-        try!(file.read_exact(&mut buffer));
-        let mut field = Field::new(String::from_utf8_lossy(&buffer).into_owned());
+        let field_name = try!(read_string(file));
+        let mut field = Field::new(field_name);
 
-        try!(file.read_exact(&mut buffer));
-        field.offset = convert_bytes_to_u32(buffer);
-
-        try!(file.read_exact(&mut buffer));
-        field.length = convert_bytes_to_u32(buffer);
+        field.offset = try!(read_u32(file));
+        field.length = try!(read_u32(file));
 
         table.fields.push(field);
 
@@ -90,48 +56,28 @@ pub fn read_table_header(table: &mut Table, file: &mut File) -> Result<(), Box<E
 
 pub fn create_table_header(table: &mut Table, file: &mut File) -> Result<(), Box<Error>> {
 
-    try!(file.seek(SeekFrom::Start(OFFSET_EYECATCHER)));
-    try!(write!(file, "FTBL"));
-    
-    let buffer = convert_u64_to_bytes(table.record_length);
-    try!(file.write(&buffer));
+    try!(write_eyecatcher(file, String::from("FTBL")));
+    try!(write_u32(file, table.record_length));
+    try!(write_u64(file, table.record_count));
+    try!(write_u64(file, table.first_record_pointer));
+    try!(write_u32(file, table.fields.len() as u32));
 
-    let buffer = convert_u64_to_bytes(table.record_count);
-    try!(file.write(&buffer));
-
-    let buffer = convert_u64_to_bytes(table.first_record_pointer);
-    try!(file.write(&buffer));
-
-    let buffer = convert_u32_to_bytes(table.fields.len() as u32);
-    try!(file.write(&buffer));
-    
-    let mut record_length: u64 = 0;
+    let mut record_length: u32 = 0;
     for field in &table.fields {
-        
-        let buffer = convert_u32_to_bytes(field.field_name.len() as u32);
-        try!(file.write(&buffer));
-        try!(file.write(field.field_name.as_bytes()));
 
-        let buffer = convert_u32_to_bytes(field.offset);
-        try!(file.write(&buffer));
-
-        let buffer = convert_u32_to_bytes(field.length);
-        try!(file.write(&buffer));
-
-        record_length = record_length + (field.length as u64);
+        try!(write_string(file, field.field_name.len(), &field.field_name));
+        try!(write_u32(file, field.offset));
+        try!(write_u32(file, field.length));
+        record_length = record_length + (field.length);
 
     }
 
-    let first_record_pointer = try!(file.seek(SeekFrom::Current(0)));
-    let buffer = convert_u64_to_bytes(first_record_pointer);
-    try!(file.seek(SeekFrom::Start(OFFSET_FIRST_RECORD_POINTER)));
-    try!(file.write(&buffer));
-
+    let first_record_pointer = try!(get_current_offset(file));
+    try!(seek_and_write_u64(file, 0, OFFSET_FIRST_RECORD_POINTER, first_record_pointer));
+    
     table.record_length = record_length;
-    let buffer = convert_u64_to_bytes(record_length);
-    try!(file.seek(SeekFrom::Start(OFFSET_RECORD_LENGTH)));
-    try!(file.write(&buffer));
-
+    try!(seek_and_write_u32(file, 0, OFFSET_RECORD_LENGTH, table.record_length));
+    
     try!(file.sync_all());
 
     Ok(())

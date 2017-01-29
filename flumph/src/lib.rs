@@ -16,4 +16,5 @@
 pub mod field;
 pub mod table;
 pub mod table_persistence;
+pub mod table_io;
 mod utils;

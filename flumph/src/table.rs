@@ -20,11 +20,12 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use table_persistence::create_table_header;
 use table_persistence::read_table_header;
-use table_persistence::get_file_length;
 use std::error::Error;
+use std::io::SeekFrom;
+use std::io::Seek;
 
 pub struct Table {
-    pub record_length: u64,
+    pub record_length: u32,
     pub record_count: u64,
     pub first_record_pointer: u64,
     pub table_name: String,
@@ -45,7 +46,7 @@ impl Table {
             .expect("Could not open table");
 
 
-        if get_file_length(&mut file) == 0 {
+        if file.seek(SeekFrom::End(0)).unwrap() == 0 {
             try!(create_table_header(self, &mut file));
         } else {
             try!(read_table_header(self, &mut file));

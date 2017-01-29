@@ -48,7 +48,7 @@ fn test_table_header() {
     // non-zero values. Note that record length should get replaced with the actual
     // length (100)
 
-    table.record_length = 0xF0F0F0F0DEDEDEDE;
+    table.record_length = 0xF00FBABE;
     table.record_count = 0xFF00FF00DDEEDDEE;    
 
     // First time through should create the header
