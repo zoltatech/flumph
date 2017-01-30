@@ -21,6 +21,16 @@ use std::string::String;
 use std::path::Path;
 use std::fs::remove_file;
 
+// This purpose of the following test is to validate the creation and 
+// subsequent reading of the table header information. 
+//
+// 1. A new table is created (and if it was there from before, deleted)
+// 2. Two fields are added.
+// 3. Garbage is added to table metadata
+// 4. The table is "created" on disk, causing the header to be written
+// 5. The table is re-opened, and causing the header to be read
+// 6. The header data is validated for accuracy, including the two fields.
+
 #[test]
 fn test_table_header() {
 
@@ -32,7 +42,9 @@ fn test_table_header() {
     if path.exists() {         
         match remove_file(path) {
             Ok(_) => (),
-            Err(e) => panic!("Found an existing test file and could not remove it: {}", e.to_string())
+            Err(e) => 
+                panic!("Existing test file could not beremoved: {}",
+                e.to_string())
         }
     }
 
@@ -44,9 +56,9 @@ fn test_table_header() {
     another_field.offset=40;
     table.fields.push(another_field);
 
-    // You would never do this, but we're testing the header creation so we need some
-    // non-zero values. Note that record length should get replaced with the actual
-    // length (100)
+    // You would never do this, but we're testing the header creation so 
+    // we need some non-zero values. Note that record length should get 
+    // replaced with the actual length (100)
 
     table.record_length = 0xF00FBABE;
     table.record_count = 0xFF00FF00DDEEDDEE;    
