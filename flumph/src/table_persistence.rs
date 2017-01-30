@@ -26,14 +26,21 @@ const OFFSET_FIRST_RECORD_POINTER: u64 = 16;
 const OFFSET_FIELD_COUNT: u64 = 20;
 const OFFSET_FIELD_LIST: u64 = 28;
 
+// **************************************************************************
+// Reads all of the header information, including field definitions,
+// from the table file.
 
-pub fn read_table_header(table: &mut Table, file: &mut File) -> Result<(), Box<Error>> {
+pub fn read_table_header(table: &mut Table, file: &mut File) -> 
+    Result<(), Box<Error>> {
 
     try!(validate_eyecatcher(file, String::from("FTBL")));
 
-    table.record_length = try!(seek_and_read_u32(file, 0, OFFSET_RECORD_LENGTH));
-    table.record_count = try!(seek_and_read_u64(file, 0, OFFSET_RECORD_COUNT));
-    table.first_record_pointer = try!(seek_and_read_u64(file, 0, OFFSET_FIRST_RECORD_POINTER));
+    table.record_length = 
+        try!(seek_and_read_u32(file, 0, OFFSET_RECORD_LENGTH));
+    table.record_count = 
+        try!(seek_and_read_u64(file, 0, OFFSET_RECORD_COUNT));
+    table.first_record_pointer = 
+        try!(seek_and_read_u64(file, 0, OFFSET_FIRST_RECORD_POINTER));
     let field_count = try!(seek_and_read_u32(file, 0, OFFSET_FIELD_COUNT));
 
     try!(move_to_offset(file, 0, OFFSET_FIELD_LIST));
@@ -54,7 +61,12 @@ pub fn read_table_header(table: &mut Table, file: &mut File) -> Result<(), Box<E
 
 }
 
-pub fn create_table_header(table: &mut Table, file: &mut File) -> Result<(), Box<Error>> {
+// **************************************************************************
+// Creates a new table, writing out all the header metadata including
+// field definitions.
+
+pub fn create_table_header(table: &mut Table, file: &mut File) -> 
+    Result<(), Box<Error>> {
 
     try!(write_eyecatcher(file, String::from("FTBL")));
     try!(write_u32(file, table.record_length));
@@ -73,10 +85,12 @@ pub fn create_table_header(table: &mut Table, file: &mut File) -> Result<(), Box
     }
 
     let first_record_pointer = try!(get_current_offset(file));
-    try!(seek_and_write_u64(file, 0, OFFSET_FIRST_RECORD_POINTER, first_record_pointer));
+    try!(seek_and_write_u64(file, 0, OFFSET_FIRST_RECORD_POINTER, 
+        first_record_pointer));
     
     table.record_length = record_length;
-    try!(seek_and_write_u32(file, 0, OFFSET_RECORD_LENGTH, table.record_length));
+    try!(seek_and_write_u32(file, 0, OFFSET_RECORD_LENGTH, 
+        table.record_length));
     
     try!(file.sync_all());
 

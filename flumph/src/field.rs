@@ -15,11 +15,17 @@
 
 use std::string::String;
 
+// **************************************************************************
+// Field Structure
+
 pub struct Field {
     pub offset: u32,
     pub length: u32,
     pub field_name: String
 }
+
+// **************************************************************************
+// Field Implementation
 
 impl Field {
 

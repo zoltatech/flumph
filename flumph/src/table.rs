@@ -20,9 +20,11 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use table_persistence::create_table_header;
 use table_persistence::read_table_header;
+use table_io::get_table_size;
 use std::error::Error;
-use std::io::SeekFrom;
-use std::io::Seek;
+
+// **************************************************************************
+// Table Structure
 
 pub struct Table {
     pub record_length: u32,
@@ -33,20 +35,23 @@ pub struct Table {
     pub fields: Vec<Field>
 }
 
+// **************************************************************************
+// Table Implementation
+
 impl Table {
 
     pub fn new(table_name: String, path: String) -> Table {
-        Table{table_name: table_name, file_path: path, record_length: 0, record_count: 0, 
-            first_record_pointer: 0, fields: vec![]}
+        Table{table_name: table_name, file_path: path, record_length: 0, 
+            record_count: 0, first_record_pointer: 0, fields: vec![]}
     }
 
     pub fn open(&mut self) -> Result<File, Box<Error>> {
         let path = Path::new(&self.file_path).join(&self.table_name);
-        let mut file = OpenOptions::new().read(true).write(true).create(true).open(path)
+        let mut file = 
+            OpenOptions::new().read(true).write(true).create(true).open(path)
             .expect("Could not open table");
 
-
-        if file.seek(SeekFrom::End(0)).unwrap() == 0 {
+        if try!(get_table_size(&mut file)) == 0 {
             try!(create_table_header(self, &mut file));
         } else {
             try!(read_table_header(self, &mut file));

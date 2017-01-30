@@ -43,6 +43,12 @@ pub fn move_to_offset(file: &mut File, base: u64, offset: u64) ->
 
 }
 
+pub fn get_table_size(file: &mut File) -> Result<u64, Box<Error>> {
+
+    Ok(try!(file.seek(SeekFrom::End(0))))
+
+}
+
 // **************************************************************************
 // 
 // Functions to read and write strings. Strings are written as a four-byte
